@@ -14,16 +14,9 @@ python 仮想環境を有効化
 .\venv\Scripts\activate
 ```
 
-
-ライブラリを更新した場合は以下を実行
+新しい環境でライブラリを取得する場合は、ターミナルで以下のコマンドを実行すること
 
 ```
-pip freeze > requirements.txt
+pip install -r requirements.txt
 ```
 
-Pylanceキャッシュのクリア
-
-まれにPylanceのキャッシュが原因でインポートエラーが表示されることがあります。以下の手順でPylanceのキャッシュをクリアしてみてください。
-
-コマンドパレット（Ctrl+Shift+P）を開きます。
-"Python: Restart Language Server" を選択してPylanceを再起動します。
