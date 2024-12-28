@@ -3,9 +3,9 @@ import tempfile
 import shutil
 from datetime import datetime
 
-from dev_logger import logger
-from split_audio import split_audio
-from transcribe_by_openai import export_audio_to_text_by_openai
+from utils.dev_logger import logger
+from app.split_audio import split_audio
+from app.transcribe_by_openai import export_audio_to_text_by_openai
 
 
 def tanscribe_audio_file(mp3_path, out_text_path):

@@ -2,7 +2,7 @@ import os
 import openai
 import time
 
-from dev_logger import logger
+from utils.dev_logger import logger
 
 
 def get_openai_api_key():

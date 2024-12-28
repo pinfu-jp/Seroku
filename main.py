@@ -1,6 +1,6 @@
 import os
 
-from transcribe_mp3 import tanscribe_audio_file
+from app.transcribe_mp3 import tanscribe_audio_file
 
 
 if __name__ == '__main__':
