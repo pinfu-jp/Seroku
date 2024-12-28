@@ -1,7 +1,7 @@
 import os
 
 from app.transcribe_mp3 import tanscribe_audio_file
-
+from utils.file_utils import open_with_default_app
 
 if __name__ == '__main__':
 
@@ -10,3 +10,5 @@ if __name__ == '__main__':
     output_text_file = os.path.join(script_dir, 'tmp', 'output', 'output.txt')
 
     tanscribe_audio_file(mp3_path, output_text_file)
+
+    open_with_default_app(output_text_file)
