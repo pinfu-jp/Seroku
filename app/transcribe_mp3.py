@@ -4,8 +4,9 @@ import shutil
 from datetime import datetime
 
 from utils.dev_logger import logger
+from utils.openai_utils import export_audio_to_text_by_openai
+
 from app.split_audio import split_audio
-from app.transcribe_by_openai import export_audio_to_text_by_openai
 
 
 def tanscribe_audio_file(mp3_path, out_text_path):

@@ -4,6 +4,8 @@ import time
 
 from utils.dev_logger import logger
 
+# OpenAI 関連機能
+
 
 def get_openai_api_key():
     """

@@ -2,6 +2,8 @@ import os
 import subprocess
 from pydub import AudioSegment
 
+from utils.ffmpeg_utils import detect_silence_by_ffmpeg
+
 BYTES_IN_MB = 1024 * 1024 * 8
 
 def split_audio(audio_file_path, output_folder,
@@ -37,8 +39,8 @@ def split_audio(audio_file_path, output_folder,
     # WAV変換
     wav_file = convert_to_wav(audio_file_path)
     
-    # ffmpegでの無音検出
-    silence_ranges = ffmpeg_detect_silence(wav_file, silence_thresh, min_silence_len)
+    # 無音範囲を検出
+    silence_ranges = detect_silence_by_ffmpeg(wav_file, silence_thresh, min_silence_len)
     
     # 無音区間にパディングを追加（境界を少しずらす）
     adjusted_silence_ranges = []
@@ -75,41 +77,6 @@ def convert_to_wav(input_file):
     audio = AudioSegment.from_file(input_file)
     audio.export(wav_file, format="wav")
     return wav_file
-
-def ffmpeg_detect_silence(wav_file, silence_thresh, min_silence_len):
-    # ffmpegのsilencedetectフィルタを使い、dB閾値と無音時間を調整する
-    # ここでは閾値を例：noise=-35dB、d=3.0sなど
-    silence_db = silence_thresh
-    silence_sec = min_silence_len / 1000.0
-    
-    cmd = [
-        "ffmpeg",
-        "-i", wav_file,
-        "-af", f"silencedetect=noise={silence_db}dB:d={silence_sec}",
-        "-f", "null",
-        "-"
-    ]
-    
-    result = subprocess.run(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
-    lines = result.stderr.split('\n')
-    
-    silence_ranges = []
-    current_start = None
-    
-    for line in lines:
-        if "silence_start:" in line:
-            parts = line.strip().split("silence_start: ")
-            if len(parts) > 1:
-                current_start = float(parts[1])
-        elif "silence_end:" in line:
-            parts = line.strip().split("silence_end: ")
-            if len(parts) > 1 and current_start is not None:
-                end_str = parts[1].split('|')[0].strip()
-                silence_end = float(end_str)
-                silence_ranges.append((int(current_start * 1000), int(silence_end * 1000)))
-                current_start = None
-    
-    return silence_ranges
 
 def calculate_max_duration(max_size_mb, bitrate):
     # MBとbitrateから最大許容長(ms)算出

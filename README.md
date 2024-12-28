@@ -11,6 +11,8 @@
 
 # 利用準備
 
+## OpenAI
+
 - APIを使うために OpenAIプラットフォーム でライセンス契約が必要です
   - https://platform.openai.com/docs/overview
 
@@ -19,6 +21,13 @@
 - 秘密鍵を、自分の Windows マシンの環境変数に登録します
   - 変数名: OPENAI_API_KEY
   - 変数値: 先ほど取得したAPIキー（sk-から始まるキー）
+
+## ffmpeg
+
+- 音声ファイル分割を無音区間で行うために、ffmpeg を使います
+- 公式サイトから Windows用をダウンロードします
+  - https://github.com/BtbN/FFmpeg-Builds/releases
+- Windowsマシンの環境変数にパスを追加します
 
 <br>
 
