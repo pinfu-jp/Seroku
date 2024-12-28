@@ -1,11 +1,11 @@
 import os
-import openai
 import tempfile
 import shutil
 from datetime import datetime
 
-from split_audio import split_audio
 from dev_logger import logger
+from split_audio import split_audio
+from transcribe_by_openai import export_audio_to_text_by_openai
 
 
 def tanscribe_audio_file(mp3_path, out_text_path):
@@ -62,13 +62,6 @@ def transcribe_audio_files(mp3_folder, output_text_file):
     :param mp3_folder: 音声ファイルが保存されているフォルダのパス（ファイル名昇順で処理）
     :param output_text_file: 出力先の結合テキストファイルのパス
     """
-    # OpenAI APIキーの設定
-    openai_api_key = os.getenv('OPENAI_API_KEY')
-    if not openai_api_key:
-        logger.error("OpenAI APIキーが設定されていません。環境変数 'OPENAI_API_KEY' を設定してください。")
-        return
-
-    openai.api_key = openai_api_key
 
     # フォルダ内のファイルを取得し、ソート（順番に処理するため）
     file_list = sorted(os.listdir(mp3_folder))
@@ -114,30 +107,17 @@ def is_audio_file(file_name):
     return file_name.lower().endswith(audio_extensions)
 
 
-def process_audio_file(file_path, output_file_path):
+def process_audio_file(audio_file_path, text_file_path):
     """
     音声ファイルを文字起こしし、個別のテキストファイルに保存する。
 
-    :param file_path: 音声ファイルのパス
-    :param output_file_path: 出力テキストファイルのパス
+    :param audio_file_path: 音声ファイルのパス
+    :param text_file_path: 出力テキストファイルのパス
     """
 
-    file_name = os.path.splitext(os.path.basename(file_path))[0]
+    # OpenAI を使って音声ファイルをテキストファイルに出力
+    export_audio_to_text_by_openai(audio_file_path, text_file_path)
 
-    logger.info(f"文字起こし開始 -> {file_path}")
-    try:
-        with open(file_path, 'rb') as audio_file:
-            # Whisper APIを呼び出して文字起こし
-            transcript = openai.Audio.transcribe('whisper-1', audio_file)
-
-            # テキストファイルに保存
-            with open(output_file_path, 'w', encoding='utf-8') as f:
-                f.write(transcript['text'])
-
-            logger.info(f"文字起こし完了 -> {output_file_path}")
-    except Exception as e:
-        logger.error(f"文字起こし失敗 -> {file_path}: {e}")
-        raise   # 例外通知
 
 def delete_directory(directory):
     """
@@ -155,68 +135,3 @@ def delete_directory(directory):
         print(f"エラー: ディレクトリの削除に失敗しました -> {e}")
 
 
-if __name__ == '__main__':
-
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    mp3_path = os.path.join(script_dir, 'tmp', 'input', 'test123.mp3')
-    output_text_file = os.path.join(script_dir, 'tmp', 'output', 'output.txt')
-
-    tanscribe_audio_file(mp3_path, output_text_file)
-
-
-# OpenAI の使い方
-
-# 1. アカウントの用意
-# OpenAIアカウントを作成
-# OpenAIのウェブサイト にアクセスします。
-# https://platform.openai.com/docs/overview
-# 「Sign up」をクリックし、メールアドレスやGoogleアカウントなどを用いてアカウントを作成します。
-# アカウントを既に持っている場合は「Log in」からログインしてください。
-
-# 2. アカウントへのログイン
-# ログイン
-# 成功裏にアカウントが作成されると、再びOpenAIプラットフォームへアクセスします。
-# 「Log in」ボタンから登録したアカウント情報を用いてログインします。
-
-# 3. APIキーの管理画面へ移動
-# APIキー管理ページを開く
-# ログイン後、右上に自分のアカウントアイコン（またはメールアドレス）が表示されます。それをクリックし、表示されるメニューから「View API keys」を選択します。
-# 「View API keys」をクリックすると、APIキーの管理ページが表示されます。
-
-# 4. APIキーの生成
-# 新しいシークレットキー（Secret key）の発行
-# 「Create new secret key」（新しいシークレットキーを作成）というボタンがあるはずです。これをクリックします。
-# 数秒待つと、新しいAPIキーが表示されます。
-
-# 5. APIキーの保管
-# キーの保存
-# ここで表示されたキーは一度だけ表示されます。後で再度表示させることはできません。
-# 「Copy」ボタンを押してキーをコピーし、必ず安全な場所（パスワードマネージャーや安全なテキストファイルなど）に保存してください。
-# 重要: このAPIキーを第三者に知られないよう注意してください。APIキーはあなた専用で、これが漏れると不正利用される危険があります。
-
-# 6. Windows環境変数への設定方法
-# Windowsでは、環境変数にAPIキーを設定することで、コード上にキーを直接記述せずに済むため、セキュリティや再利用性の観点からも有用です。
-# 方法: システムのプロパティから設定
-# 「環境変数」の設定画面を開く
-# スタートメニューを開き、検索ボックスに「環境変数」と入力します。
-# 検索結果から「システム環境変数の編集」を選択します。
-# または、Windowsキー + Rで「ファイル名を指定して実行」を開き、sysdm.cplと入力してEnterを押し、「詳細設定」タブにある「環境変数」をクリックします。
-# 環境変数の編集ウィンドウで新規変数を追加
-# 「環境変数」ウィンドウが表示されたら、以下のいずれかを選択します。
-# ユーザー環境変数: 現在のログインユーザーにのみ適用
-# システム環境変数: このPCの全ユーザーに適用（管理者権限が必要）
-# 「新規(N)...」ボタンをクリックします。
-# 新しい環境変数の作成
-# 「新しい○○変数」ダイアログが開くので、以下のように入力します。
-# 変数名: OPENAI_API_KEY
-# 変数値: 先ほど取得したAPIキー（sk-から始まるキー）
-# 入力が終わったら「OK」をクリックします。
-# 設定の反映
-# 「環境変数」ウィンドウ、そして「システムのプロパティ」を「OK」で閉じます。
-# 既に開いているコマンドプロンプトやPowerShellがあれば、再起動してください。新しい環境変数は、次回開いたターミナルやアプリケーションから有効になります。
-
-# 7. 必要に応じた更新や削除
-# キーのローテーション・削除
-# 再度「View API keys」ページにアクセスすると、既に発行されたキーの一覧が表示されています（ただし値は表示されず、ラベルのみ）。
-# 万が一キーが漏洩したと思われる場合は、そのキーを「Delete」ボタンで削除してください。
-# 新しく必要な場合は再度「Create new secret key」から発行できます。

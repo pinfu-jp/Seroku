@@ -4,22 +4,38 @@ from pydub import AudioSegment
 
 BYTES_IN_MB = 1024 * 1024 * 8
 
-def split_audio(input_file, output_folder='output_chunks', max_size_mb=20, bitrate='192k', 
-                silence_thresh=-35, min_silence_len=3000, silence_padding=500):
-    # 日本語コメント：
+def split_audio(audio_file_path, output_folder,
+                max_size_mb=20,
+                bitrate='192k', 
+                silence_thresh=-35,
+                min_silence_len=3000,
+                silence_padding=500):
+    """
+    音声ファイルを分割して指定フォルダへ出力します。
+
+    :param input_file: 音声ファイルのパス
+    :param output_folder: 出力先のフォルダパス
+    :param max_size_mb: チャンクの最大サイズ(初期値：20MB)
+    :param bitrate: 出力MP3のビットレート（初期値：192k）
+    :param silence_thresh: 無音と判断するdB閾値（初期値：-35dB）
+    :param min_silence_len: 無音と判断する最小長さ(初期値：3000ms)
+    :param silence_padding: 無音区間の前後に追加する余白(初期値：500ms)
+    :return: None
+    """
+
     # silence_threshをより小さくする（例：-35dBにする）ことで、より静かな箇所のみ無音と判断
     # min_silence_lenを3秒(3000ms)にすることで、短い切れ目でのカットを防止
     # silence_paddingは、検出した無音境界から前後に500ms程度ずらして、より自然な分割点にする
     
     # 入力ファイル検証
-    if not validate_file(input_file):
+    if not validate_file(audio_file_path):
         return
     
     # 出力フォルダの作成
     os.makedirs(output_folder, exist_ok=True)
     
     # WAV変換
-    wav_file = convert_to_wav(input_file)
+    wav_file = convert_to_wav(audio_file_path)
     
     # ffmpegでの無音検出
     silence_ranges = ffmpeg_detect_silence(wav_file, silence_thresh, min_silence_len)
@@ -39,14 +55,14 @@ def split_audio(input_file, output_folder='output_chunks', max_size_mb=20, bitra
     max_duration_ms = calculate_max_duration(max_size_mb, bitrate)
     
     # チャンク出力
-    export_audio_chunks(audio, adjusted_silence_ranges, max_duration_ms, output_folder, input_file, bitrate)
+    export_audio_chunks(audio, adjusted_silence_ranges, max_duration_ms, output_folder, audio_file_path, bitrate)
     
     # 一時ファイル削除
     if os.path.exists(wav_file):
         os.remove(wav_file)
 
 def validate_file(input_file):
-    # 日本語コメント：ファイル存在＆MP3形式チェック
+    # ファイル存在＆MP3形式チェック
     if not os.path.exists(input_file):
         raise FileNotFoundError(f"エラー: ファイルが見つかりません -> {input_file}")
     if not input_file.lower().endswith('.mp3'):
@@ -54,14 +70,13 @@ def validate_file(input_file):
     return True
 
 def convert_to_wav(input_file):
-    # 日本語コメント：MP3をWAVに変換
+    # MP3をWAVに変換
     wav_file = os.path.splitext(input_file)[0] + ".wav"
     audio = AudioSegment.from_file(input_file)
     audio.export(wav_file, format="wav")
     return wav_file
 
 def ffmpeg_detect_silence(wav_file, silence_thresh, min_silence_len):
-    # 日本語コメント：
     # ffmpegのsilencedetectフィルタを使い、dB閾値と無音時間を調整する
     # ここでは閾値を例：noise=-35dB、d=3.0sなど
     silence_db = silence_thresh
@@ -97,14 +112,12 @@ def ffmpeg_detect_silence(wav_file, silence_thresh, min_silence_len):
     return silence_ranges
 
 def calculate_max_duration(max_size_mb, bitrate):
-    # 日本語コメント：
     # MBとbitrateから最大許容長(ms)算出
     bitrate_kbps = int(bitrate.replace('k', ''))
     max_duration_sec = (max_size_mb * BYTES_IN_MB) / (bitrate_kbps * 1000)
     return max_duration_sec * 1000  # msへ変換
 
 def export_audio_chunks(audio, silence_ranges, max_duration_ms, output_folder, input_file, bitrate):
-    # 日本語コメント：
     # 無音区間のリストに基づきチャンクを切り出す
     
     if not silence_ranges:
@@ -131,7 +144,7 @@ def export_audio_chunks(audio, silence_ranges, max_duration_ms, output_folder, i
         save_chunk(audio[start_time:], output_folder, base_name, chunk_index, bitrate)
 
 def save_chunk(chunk, output_folder, base_name, chunk_index, bitrate):
-    # 日本語コメント：チャンクをMP3で出力
+    # チャンクをMP3で出力
     output_file = os.path.join(output_folder, f"{base_name}_{chunk_index}.mp3")
     try:
         chunk.export(output_file, format="mp3", bitrate=bitrate)
